@@ -1,6 +1,6 @@
-# SECURITY IN AI SYSTEMS OPERATIONS
+# Security in AI Systems Operations
 
-**Session Time:** 120 minutes 
+**Session Time:** 120 minutes
 
 ---
 
@@ -17,9 +17,9 @@
 
 By the end of this module, participants will be able to:
 
-1. Describe common vulnerabilities in AI systems and data pipelines. 
-2. Apply access control and encryption practices to secure operational environments. 
-3. Evaluate system security posture using vulnerability scans and compliance checks. 
+1. Describe common vulnerabilities in AI systems and data pipelines.
+2. Apply access control and encryption practices to secure operational environments.
+3. Evaluate system security posture using vulnerability scans and compliance checks.
 
 ---
 
@@ -39,25 +39,33 @@ By the end of this module, participants will be able to:
 To understand the fundamentals of securing AI systems and protecting sensitive data, you must first be able to identify where the weaknesses lie. AI systems face traditional software vulnerabilities as well as AI-specific threats, such as data poisoning and prompt injection. 
 
 ### Concepts: AI Vulnerability Landscapes
-* **Prompt Injection:** 
-  
-  Malicious inputs designed to manipulate the output of a Large Language Model (LLM) or bypass its safety guardrails.
-
-* **Data Pipeline Poisoning:** 
-  
-  Attackers compromising the training or fine-tuning data to alter the model's behavior over time.
-
-* **API Exposure:** 
-  
-  Unsecured inference endpoints that allow unauthorized access to the model, leading to data loss or model theft.
-
-
+* **Prompt Injection:** Malicious inputs designed to manipulate the output of a Large Language Model (LLM) or bypass its safety guardrails. Prompt injection is fundamentally different from standard input validation. Traditional input validation (like SQL injection defense) sanitizes inputs to prevent them from being interpreted as commands by a database. However, in prompt injection, the input *is* the command, meaning defense requires semantic analysis of intent rather than syntactic sanitization.
+* **Data Pipeline Poisoning:** Attackers compromising the training or fine-tuning data to alter the model's behavior over time. A sudden unexplained drop in model confidence score can be an early indicator of training data compromise — exactly the metric your Lab 5 Prometheus Gauge monitors.
+* **API Exposure:** Unsecured inference endpoints that allow unauthorized access to the model, leading to data loss or model theft.
 
 ### Tools Used: OWASP ZAP
-OWASP ZAP (Zed Attack Proxy) is an open-source web application security scanner. In an AI operations context, it is used to probe the API wrappers surrounding your machine learning models for common web vulnerabilities (like injection flaws or broken authentication) before they are deployed to production.
+OWASP ZAP (Zed Attack Proxy) is an open-source web application security scanner. In an AI operations context, it is used to probe the API wrappers surrounding your machine learning models for common web vulnerabilities (like injection flaws or broken authentication) before they are deployed to production. 
+
+Running an active OWASP ZAP scan requires a running target API service and typically takes 15–20 minutes of active scan time. Because of this setup overhead, operational labs often focus on parsing and triaging pre-collected ZAP JSON reports instead.
+
+
+**Sample ZAP Finding JSON:**
+To evaluate system security posture, you must understand how to read a scanner's output. Below is an example of what a ZAP alert JSON looks like when an endpoint lacks rate limiting:
+```json
+{
+  "site": "[http://api.ai-service.local](http://api.ai-service.local)",
+  "alerts": [
+    {
+      "alert": "Absence of Anti-CSRF Tokens",
+      "riskdesc": "High (Medium)",
+      "desc": "No rate limiting or CSRF tokens were found, enabling potential Denial of Service.",
+      "solution": "Implement standard rate limiting and token validation."
+    }
+  ]
+}
+```
 
 ### Practical Example
-If your AI model is served via a REST API, you can configure OWASP ZAP to actively attack the endpoint.
 
 ```mermaid
 graph TD
@@ -74,6 +82,7 @@ graph TD
 
 ```
 
+
 **Scenario:** You run OWASP ZAP against your new internal text-summarization AI API. ZAP discovers that the endpoint lacks rate limiting, meaning an attacker could flood the API, causing a Denial of Service (DoS) and driving up compute costs by forcing the GPU to process infinite requests.
 
 ---
@@ -85,16 +94,15 @@ Once vulnerabilities are understood, the next step is to apply access control an
 ### Concepts: Securing the Environment
 
 * **Role-Based Access Control (RBAC):**
-  
   Ensuring that a frontend application has only "read" (inference) access to a model, while only CI/CD pipelines have "write" (deployment) access.
-
 * **Encryption:**
-  
   Using TLS for API requests and encrypting training data storage volumes.
 
-### Tools Used: GitHub Security Scan (Secret Scanning)
+### Tools Used: GitHub Security Scan & truffleHog
 
-GitHub Security Scan includes tools to apply DevSecOps principles directly in your code repository. One critical feature is Secret Scanning, which prevents developers from accidentally committing hardcoded API keys or access tokens into the repository.
+GitHub Security Scan includes tools to apply DevSecOps principles directly in your code repository. One critical feature is Secret Scanning, which prevents developers from accidentally committing hardcoded API keys or access tokens into the repository. 
+
+Please note that GitHub Secret Scanning is only available on public repositories or repositories with GitHub Advanced Security (a paid feature not available on free plans). For free plans or other CI systems, `truffleHog` is highly recommended as an open-source alternative for implementing secret scanning logic.
 
 ### Practical Example
 
@@ -103,7 +111,7 @@ A developer is writing a Python script to query a proprietary OpenAI or internal
 ```mermaid
 graph LR
     Dev[Engineer] -->|git push| Repo(GitHub Repository)
-    Repo --> Scan{GitHub Security Scan<br/>Secret Scanning}
+    Repo --> Scan{Security Scan<br/>Secret Scanning}
     Scan -->|API Key Detected| Block[Push Blocked]
     Scan -->|No Secrets| Deploy[Merge Allowed]
     
@@ -112,9 +120,8 @@ graph LR
 
 ```
 
-**Scenario:** 
 
-GitHub Security Scan intercepts the commit. It detects the pattern of a sensitive access token and blocks the push, preventing the credential from being leaked. This enforces access control by ensuring credentials are appropriately managed via secure environment variables or a key management service.
+**Scenario:** A secret scanning tool (like GitHub Secret Scanning or `truffleHog`) intercepts the commit. It detects the pattern of a sensitive access token and blocks the push, preventing the credential from being leaked. This enforces access control by ensuring credentials are appropriately managed via secure environment variables or a key management service.
 
 ---
 
@@ -124,14 +131,9 @@ Security is not a one-time setup. It is necessary to evaluate the system securit
 
 ### Concepts: Continuous Compliance
 
-* **DevSecOps:** 
-  
-  Integrating security practices into the DevOps process. Every time an AI model is updated, security checks run automatically.
+* **DevSecOps:** Integrating security practices into the DevOps process. Every time an AI model is updated, security checks run automatically.
+* **Vulnerability Scanning:** Scanning Docker images and Python dependencies (`requirements.txt`) for Known Vulnerabilities and Exposures (CVEs).
 
-
-* **Vulnerability Scanning:** 
-  
-  Scanning Docker images and Python dependencies (`requirements.txt`) for Known Vulnerabilities and Exposures (CVEs).
 
 ### Visualizing the Security Pipeline
 Security tools integrate into the CI/CD pipeline in the following way:
@@ -147,9 +149,10 @@ graph LR
 
 ```
 
+
 ### Tools Used: GitHub Security Scan (Dependabot/CodeQL) and OWASP ZAP
 
-By chaining these tools, you create an automated compliance pipeline. GitHub Security Scan checks the static code and dependencies, while OWASP ZAP checks the dynamic, running application.
+By chaining these tools, you create an automated compliance pipeline. GitHub Security Scan (via Dependabot) checks the static code and dependencies for CVE findings, while tools like OWASP ZAP probe the dynamic, running application. 
 
 ### Practical Example
 
@@ -172,9 +175,8 @@ sequenceDiagram
 
 ```
 
-**Scenario:** 
 
-The GitHub Security Scan detects that your `requirements.txt` includes an outdated version of TensorFlow with a known critical vulnerability. The pipeline fails the compliance check and alerts the team to update the library before the container is ever built or deployed.
+**Scenario:** The GitHub Security Scan detects that your `requirements.txt` includes an outdated version of TensorFlow with a known critical vulnerability. The pipeline fails the compliance check and alerts the team to update the library before the container is ever built or deployed.
 
 ---
 
@@ -182,7 +184,7 @@ The GitHub Security Scan detects that your `requirements.txt` includes an outdat
 
 **Objective:** Security Audit Simulation – Learners identify and patch vulnerabilities in a sandboxed AI system environment. They apply DevSecOps principles to secure AI pipelines, protect data integrity, and implement monitoring for potential threats. The lab also introduces AI security wrappers and tools that help manage model access, prevent data loss, and defend against prompt injection and other AI-specific vulnerabilities.
 
-*(Please refer to the lab platform for complete instructions, starter code, and access to the sandboxed AI environment).*
+*(Please refer to the lab platform for complete instructions, starter code, access to the sandboxed AI environment, and pre-collected ZAP JSON reports).*
 
 ---
 
@@ -200,4 +202,3 @@ The GitHub Security Scan detects that your `requirements.txt` includes an outdat
 * [OWASP Top 10 for Large Language Model Applications](https://owasp.org/www-project-top-10-for-large-language-model-applications/)
 * [OWASP ZAP Documentation](https://www.zaproxy.org/docs/)
 * [GitHub Advanced Security Features](https://docs.github.com/en/get-started/learning-about-github/about-github-advanced-security)
-
