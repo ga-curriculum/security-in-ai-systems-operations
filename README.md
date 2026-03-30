@@ -184,7 +184,12 @@ sequenceDiagram
 
 **Objective:** Security Audit Simulation – Learners identify and patch vulnerabilities in a sandboxed AI system environment. They apply DevSecOps principles to secure AI pipelines, protect data integrity, and implement monitoring for potential threats. The lab also introduces AI security wrappers and tools that help manage model access, prevent data loss, and defend against prompt injection and other AI-specific vulnerabilities.
 
-*(Please refer to the lab platform for complete instructions, starter code, access to the sandboxed AI environment, and pre-collected ZAP JSON reports).*
+> [!NOTE]
+>
+> [Lab: **Security Audit Simulation**](https://git.generalassemb.ly/ai-systems-engineering-reliability/lab-12-security-audit-simulation)
+> 
+> **Note**: Please refer to the dedicated [Lab Guide](https://git.generalassemb.ly/ai-systems-engineering-reliability/lab-12-security-audit-simulation)
+ for full instructions, architectural constraints, and deliverables.
 
 ---
 
