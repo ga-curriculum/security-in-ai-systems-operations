@@ -186,9 +186,9 @@ sequenceDiagram
 
 > [!NOTE]
 >
-> [Lab: **Security Audit Simulation**](https://git.generalassemb.ly/ai-systems-engineering-reliability/lab-12-security-audit-simulation)
+> [Lab: **Security Audit Simulation**](https://github.com/ga-curriculum/lab-12-security-audit-simulation)
 > 
-> **Note**: Please refer to the dedicated [Lab Guide](https://git.generalassemb.ly/ai-systems-engineering-reliability/lab-12-security-audit-simulation)
+> **Note**: Please refer to the dedicated [Lab Guide](https://github.com/ga-curriculum/lab-12-security-audit-simulation)
  for full instructions, architectural constraints, and deliverables.
 
 ---
